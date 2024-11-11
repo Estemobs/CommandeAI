@@ -138,17 +138,21 @@ async def devoir(ctx):
         driver.find_element(By.LINK_TEXT, "Stay logged out").click()
         driver.find_element(By.CSS_SELECTOR, ".placeholder").click()
         element = driver.find_element(By.ID, "prompt-textarea")
+        driver.save_screenshot('capture_ecran1.png')
         
         # Après avoir extrait le texte de l'image et avant d'utiliser Selenium
         driver.execute_script(f"if(arguments[0].contentEditable === 'true') {{arguments[0].innerText = '<p>répond a l\'exercice suivant :</p><p>{text}</p>';}}", element)
         element = driver.find_element(By.CSS_SELECTOR, ".icon-md-heavy > path")
+        driver.save_screenshot('capture_ecran2.png')
         actions = ActionChains(driver)
         actions.move_to_element(element).perform()
         element = driver.find_element(By.CSS_SELECTOR, "body")
+        driver.save_screenshot('capture_ecran3.png')
         
         # Après avoir exécuté les actions nécessaires pour obtenir la réponse
         response_element = driver.find_element(By.CSS_SELECTOR, ".markdown > p")
         text_response = response_element.text
+        driver.save_screenshot('capture_ecran4.png')
         
         
         # Envoie les réponses de l'exercice
