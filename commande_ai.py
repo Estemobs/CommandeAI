@@ -23,12 +23,12 @@ from discord.ext import commands
 
 intents = discord.Intents.all()
 openai.api_key ="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"
-client = commands.Bot(command_prefix=",", intents=intents)
+client = commands.Bot(command_prefix=".", intents=intents)
 
 @client.event
 async def on_ready():
     print("Le bot est en ligne")
-    await client.change_presence(activity=discord.Game(name=",help")) 
+    await client.change_presence(activity=discord.Game(name=".help")) 
 
 #automatisation pour signalé les erreurs
 @client.event
