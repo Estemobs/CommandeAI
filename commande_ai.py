@@ -9,6 +9,14 @@ import cv2
 import pytesseract
 import openai
 import numpy as np
+import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from io import BytesIO
 from PIL import Image
 from discord.ext import commands
@@ -116,41 +124,40 @@ async def devoir(ctx):
         # Extrait le texte de l'image et l'affiche
         text = extract_text_from_image(image_url)
         await display_text(ctx, text)
-        # Utilise l'API OpenAI pour générer les réponses de l'exercice
-        prompt = f"Voici les réponses à l'exercice :\n{text}\n\nRéponses :"
-        completions = openai.Completion.create(
-            engine="davinci",
-            prompt=prompt,
-            max_tokens=500,
-            n=1,
-            stop=None,
-            temperature=0.5,
-        )
-        message = completions.choices[0].text.strip()
-
+        
+        
+        # Utilise OpenAI pour générer les réponses de l'exercice
+        options = webdriver.ChromeOptions()
+        options.add_argument("--headless")  # Active le mode headless
+        options.add_argument("executable_path=chromedriver.exe")
+        driver = webdriver.Chrome(options=options)
+        driver.get("https://chatgpt.com/")
+        driver.set_window_size(1278, 974)
+        element = driver.find_element(By.ID, "prompt-textarea")
+        driver.execute_script("if(arguments[0].contentEditable === 'true') {arguments[0].innerText = '<p data-placeholder=\"Message ChatGPT\" class=\"placeholder\"><br class=\"ProseMirror-trailingBreak\"></p>'}", element)
+        driver.find_element(By.LINK_TEXT, "Stay logged out").click()
+        driver.find_element(By.CSS_SELECTOR, ".placeholder").click()
+        element = driver.find_element(By.ID, "prompt-textarea")
+        
+        # Après avoir extrait le texte de l'image et avant d'utiliser Selenium
+        driver.execute_script(f"if(arguments[0].contentEditable === 'true') {{arguments[0].innerText = '<p>répond a l\'exercice suivant :</p><p>{text}</p>';}}", element)
+        element = driver.find_element(By.CSS_SELECTOR, ".icon-md-heavy > path")
+        actions = ActionChains(driver)
+        actions.move_to_element(element).perform()
+        element = driver.find_element(By.CSS_SELECTOR, "body")
+        
+        # Après avoir exécuté les actions nécessaires pour obtenir la réponse
+        response_element = driver.find_element(By.CSS_SELECTOR, ".markdown > p")
+        text_response = response_element.text
+        
+        
         # Envoie les réponses de l'exercice
-        await ctx.send(f"Réponses : {message}")
+        await ctx.send(f"Réponse de ChatGPT : {text_response}")
 
     except asyncio.TimeoutError:
         await ctx.send("Vous n'avez pas envoyé d'image dans le délai imparti.")
     except Exception as e:
         await ctx.send(f"Une erreur s'est produite : {str(e)}")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # Lire les secrets à partir du fichier JSON
 with open("secrets.json", "r") as file:
