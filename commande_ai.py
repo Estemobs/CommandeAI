@@ -7,7 +7,6 @@ import requests
 import io
 import cv2
 import pytesseract
-import openai
 import numpy as np
 import time
 from selenium import webdriver
@@ -22,7 +21,6 @@ from PIL import Image
 from discord.ext import commands
 
 intents = discord.Intents.all()
-openai.api_key ="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"
 client = commands.Bot(command_prefix=".", intents=intents)
 
 @client.event
@@ -128,7 +126,7 @@ async def devoir(ctx):
         
         # Utilise OpenAI pour générer les réponses de l'exercice
         options = webdriver.ChromeOptions()
-        options.add_argument("--headless")  # Active le mode headless
+        #options.add_argument("--headless")  # Active le mode headless
         options.add_argument("executable_path=chromedriver.exe")
         driver = webdriver.Chrome(options=options)
         driver.get("https://chatgpt.com/")
@@ -168,7 +166,6 @@ with open("secrets.json", "r") as file:
     secrets = json.load(file)
 
 # Récupérer les tokens
-chatgpt_token = secrets["chatgpt_token"]
 ddc_token = secrets["ddc_token"]
 ddcbeta_token = secrets["ddcbeta_token"]
         
