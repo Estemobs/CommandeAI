@@ -148,7 +148,7 @@ async def devoir(ctx):
             driver.get("https://chatgpt.com/")
             driver.set_window_size(1278, 974)
             element = driver.find_element(By.ID, "prompt-textarea")
-            driver.execute_script("if(arguments[0].contentEditable === 'true') {arguments[0].innerText = '<p data-placeholder=\"Message ChatGPT\" class=\"placeholder\"><br class=\"ProseMirror-trailingBreak\"></p>'}", element)
+            driver.execute_script(f"if(arguments[0].contentEditable === 'true') {{arguments[0].innerText = '<p>répond a l\'exercice suivant :</p><p>{text}</p>';}}", element)
             driver.find_element(By.LINK_TEXT, "Stay logged out").click()
             driver.find_element(By.CSS_SELECTOR, ".placeholder").click()
             element = driver.find_element(By.ID, "prompt-textarea")
