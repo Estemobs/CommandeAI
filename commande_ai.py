@@ -48,10 +48,29 @@ async def on_command_error(ctx, error):
 
 # Fonction pour extraire le texte d'une image
 def extract_text_from_image(image_url):
-    response = requests.get(image_url)
-    img = Image.open(io.BytesIO(response.content))
-    text = pytesseract.image_to_string(img, lang='fra')
-    return text
+    try:
+        # Télécharge l'image
+        response = requests.get(image_url)
+        img = Image.open(io.BytesIO(response.content))
+        
+        # Convertit l'image en format RGB
+        rgb_img = img.convert('RGB')
+        
+        # Utilise OpenCV pour améliorer la qualité de l'image
+        cv_img = np.array(rgb_img)
+        gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
+        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+        thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        
+        # Utilise Tesseract avec des paramètres personnalisés
+        custom_config = r'--oem 3 --psm 6'
+        text = pytesseract.image_to_string(thresh, config=custom_config, lang='fra+eng', output_type=pytesseract.Output.STRING)
+        
+        return text.strip()
+    
+    except Exception as e:
+        print(f"Erreur lors de l'extraction du texte : {str(e)}")
+        return "Une erreur s'est produite lors de l'extraction du texte."
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
