@@ -2,13 +2,13 @@ import discord
 import asyncio
 import json
 import traceback
-import aiohttp
 import requests
 import io
 import cv2
 import easyocr
 import numpy as np
 import time
+import pyperclip
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -137,52 +137,33 @@ async def devoir(ctx):
         except Exception as e:
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
-        
-        # Utilise OpenAI pour générer les réponses de l'exercice
-        try:
-            # Utilise OpenAI pour générer les réponses de l'exercice
-            options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # Active le mode headless
-            options.add_argument("executable_path=chromedriver.exe")
-            driver = webdriver.Chrome(options=options)
-            driver.get("https://chatgpt.com/")
-            driver.set_window_size(1278, 974)
-            element = driver.find_element(By.ID, "prompt-textarea")
-            driver.execute_script(f"if(arguments[0].contentEditable === 'true') {{arguments[0].innerText = '<p>répond a l\'exercice suivant :</p><p>{text}</p>';}}", element)
-            driver.find_element(By.LINK_TEXT, "Stay logged out").click()
-            driver.find_element(By.CSS_SELECTOR, ".placeholder").click()
-            element = driver.find_element(By.ID, "prompt-textarea")
-            driver.save_screenshot('capture_ecran1.png')
-            
-            # Après avoir extrait le texte de l'image et avant d'utiliser Selenium
-            driver.execute_script(f"if(arguments[0].contentEditable === 'true') {{arguments[0].innerText = '<p>répond a l\'exercice suivant :</p><p>{text}</p>';}}", element)
-            element = driver.find_element(By.CSS_SELECTOR, ".icon-md-heavy > path")
-            driver.save_screenshot('capture_ecran2.png')
-            actions = ActionChains(driver)
-            actions.move_to_element(element).perform()
-            element = driver.find_element(By.CSS_SELECTOR, "body")
-            driver.save_screenshot('capture_ecran3.png')
-            
-            # Après avoir exécuté les actions nécessaires pour obtenir la réponse
-            response_element = driver.find_element(By.CSS_SELECTOR, ".markdown > p")
-            text_response = response_element.text
-            driver.save_screenshot('capture_ecran4.png')
-        
-        
-            # Envoie les réponses de l'exercice
-            await ctx.send(f"Réponse de ChatGPT : {text_response}")
 
-        except Exception as e:
-                print(f"Erreur lors de la génération des réponses : {str(e)}")
-                return await ctx.send("Une erreur s'est produite lors de la génération des réponses.")
-        
-    
+        #Utilise OpenAI pour générer les réponses de l'exercice
+        options = webdriver.ChromeOptions()
+        #options.add_argument("--headless")  # Active le mode headless
+        options.add_argument("executable_path=chromedriver.exe")
+        driver = webdriver.Chrome(options=options)   
+        driver.get("https://www.phind.com/")
+        driver.set_window_size(1280, 1024)
+        # Localise l'élément en utilisant un sélecteur approprié
+        message_box = driver.find_element(By.NAME, "q")
+        # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
+        message_box.click()
+        # Écrire du texte dans l'élément
+        message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
+        # Simuler la touche Entrée pour valider le message
+        message_box.send_keys(Keys.ENTER)
+        time.sleep(15)
+        driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
+        time.sleep(2)
+        text_response = pyperclip.paste()
+        print(text_response)
+        await ctx.send({text_response})
+
+           
     except asyncio.TimeoutError:
         print("Timeout atteint")
         return await ctx.send("Vous n'avez pas envoyé d'image dans le délai imparti.")
-    except Exception as e:
-        print(f"Une erreur inattendue s'est produite : {str(e)}")
-        return await ctx.send(f"Une erreur inattendue s'est produite lors de l'exécution de la commande")
         
 
 # Lire les secrets à partir du fichier JSON
