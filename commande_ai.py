@@ -59,31 +59,6 @@ async def display_text(ctx, text):
     await ctx.send(f"```{text}```")
 
 
-# Fonction pour vérifier si le message contient une image valide
-async def check(ctx):
-    if not ctx.message.attachments and not ctx.message.content:
-        await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
-        return False
-
-    # Vérifie si le message contient une pièce jointe valide
-    if ctx.message.attachments:
-        attachment = ctx.message.attachments[0]
-        if not attachment.url.lower().endswith(('.png', '.jpeg', '.jpg', '.gif')):
-            await ctx.send("Le fichier joint n'est pas une image valide.")
-            return False
-
-    # Vérifie si le message contient un lien d'image valide
-    if ctx.message.content:
-        url = ctx.message.content
-        async with aiohttp.ClientSession() as session:
-            async with session.head(url) as resp:
-                content_type = resp.headers.get('content-type')
-                if not content_type or not content_type.startswith('image/'):
-                    await ctx.send("Le lien fourni ne pointe pas vers une image valide.")
-                    return False
-
-    return True
-
 #fonction pour améliorer la qualité de l'image
 async def improve_image_quality(image_url):
     response = requests.get(image_url)
@@ -104,7 +79,28 @@ async def improve_image_quality(image_url):
 async def devoir(ctx):
     try:
         await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
-        message = await client.wait_for('message', check=check, timeout=60.0)
+        message = await client.wait_for('message', timeout=60.0)
+
+        if not ctx.message.attachments and not ctx.message.content:
+            await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
+            return False
+
+        # Vérifie si le message contient une pièce jointe valide
+        if ctx.message.attachments:
+            attachment = ctx.message.attachments[0]
+            if not attachment.url.lower().endswith(('.png', '.jpeg', '.jpg', '.gif')):
+                await ctx.send("Le fichier joint n'est pas une image valide.")
+                return False
+
+        # Vérifie si le message contient un lien d'image valide
+        if ctx.message.content:
+            url = ctx.message.content
+            async with aiohttp.ClientSession() as session:
+                async with session.head(url) as resp:
+                    content_type = resp.headers.get('content-type')
+                    if not content_type or not content_type.startswith('image/'):
+                        await ctx.send("Le lien fourni ne pointe pas vers une image valide.")
+                        return False
 
         # Traite la pièce jointe ou le lien d'image valide
         if message.attachments:
