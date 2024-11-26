@@ -6,7 +6,7 @@ import aiohttp
 import requests
 import io
 import cv2
-import pytesseract
+import easyocr
 import numpy as np
 import time
 from selenium import webdriver
@@ -53,20 +53,16 @@ def extract_text_from_image(image_url):
         response = requests.get(image_url)
         img = Image.open(io.BytesIO(response.content))
         
-        # Convertit l'image en format RGB
-        rgb_img = img.convert('RGB')
+        # Initialise le lecteur OCR
+        reader = easyocr.Reader(['fr'])  # Utilise le français
         
-        # Utilise OpenCV pour améliorer la qualité de l'image
-        cv_img = np.array(rgb_img)
-        gray = cv2.cvtColor(cv_img, cv2.COLOR_RGB2GRAY)
-        blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-        thresh = cv2.threshold(blurred, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)[1]
+        # Extrait le texte
+        result = reader.readtext(np.array(img))
         
-        # Utilise Tesseract avec des paramètres personnalisés
-        custom_config = r'--oem 3 --psm 6'
-        text = pytesseract.image_to_string(thresh, config=custom_config, lang='fra+eng', output_type=pytesseract.Output.STRING)
+        # Rassemble le texte extrait
+        extracted_text = ' '.join([item[1] for item in result])
         
-        return text.strip()
+        return extracted_text
     
     except Exception as e:
         print(f"Erreur lors de l'extraction du texte : {str(e)}")
