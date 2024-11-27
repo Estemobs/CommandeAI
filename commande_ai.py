@@ -140,7 +140,7 @@ async def devoir(ctx):
         try:
             #Utilise OpenAI pour générer les réponses de l'exercice
             options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # Active le mode headless
+            options.add_argument("--headless")  # Active le mode headless
             options.add_argument("executable_path=chromedriver.exe")
             driver = webdriver.Chrome(options=options)   
             driver.get("https://www.phind.com/")
