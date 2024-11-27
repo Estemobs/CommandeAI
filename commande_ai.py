@@ -137,29 +137,34 @@ async def devoir(ctx):
         except Exception as e:
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
-
-        #Utilise OpenAI pour générer les réponses de l'exercice
-        options = webdriver.ChromeOptions()
-        #options.add_argument("--headless")  # Active le mode headless
-        options.add_argument("executable_path=chromedriver.exe")
-        driver = webdriver.Chrome(options=options)   
-        driver.get("https://www.phind.com/")
-        driver.set_window_size(1280, 1024)
-        # Localise l'élément en utilisant un sélecteur approprié
-        message_box = driver.find_element(By.NAME, "q")
-        # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
-        message_box.click()
-        # Écrire du texte dans l'élément
-        message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
-        # Simuler la touche Entrée pour valider le message
-        message_box.send_keys(Keys.ENTER)
-        time.sleep(15)
-        driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
-        time.sleep(2)
-        text_response = pyperclip.paste()
-        print(text_response)
-        await ctx.send(f"{text_response}")
-        await ctx.send(f"test : {text_response}")
+        try:
+            #Utilise OpenAI pour générer les réponses de l'exercice
+            options = webdriver.ChromeOptions()
+            #options.add_argument("--headless")  # Active le mode headless
+            options.add_argument("executable_path=chromedriver.exe")
+            driver = webdriver.Chrome(options=options)   
+            driver.get("https://www.phind.com/")
+            driver.set_window_size(1280, 1024)
+            # Localise l'élément en utilisant un sélecteur approprié
+            message_box = driver.find_element(By.NAME, "q")
+            # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
+            message_box.click()
+            # Écrire du texte dans l'élément
+            message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
+            # Simuler la touche Entrée pour valider le message
+            message_box.send_keys(Keys.ENTER)
+            time.sleep(15)
+            driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
+            time.sleep(2)
+            text_response = pyperclip.paste()
+            print(text_response)
+        except Exception as e:
+            print(f"Erreur lors de la génération avec l'IA : {str(e)}")
+            return await ctx.send("Erreur lors de la génération avec l'IA") 
+        else :   
+            await ctx.send(f"{text_response}")
+            await ctx.send("test")
+            await ctx.send(f"test : {text_response}")
     
            
     except asyncio.TimeoutError:
