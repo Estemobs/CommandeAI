@@ -158,8 +158,9 @@ async def devoir(ctx):
         time.sleep(2)
         text_response = pyperclip.paste()
         print(text_response)
-        await ctx.send({text_response})
-
+        await ctx.send(f"{text_response}")
+        await ctx.send(f"test : {text_response}")
+    
            
     except asyncio.TimeoutError:
         print("Timeout atteint")
