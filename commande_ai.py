@@ -164,7 +164,6 @@ async def devoir(ctx):
         else :
             # Limite de caractères pour Discord
             char_limit = 1900
-            # Diviser le texte en morceaux
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
             chunks = [text_response[i:i + char_limit] for i in range(0, len(text_response), char_limit)]
 
