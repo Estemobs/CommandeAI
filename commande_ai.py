@@ -9,6 +9,7 @@ import easyocr
 import numpy as np
 import time
 import pyperclip
+import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -169,8 +170,11 @@ async def devoir(ctx):
 
             # Afficher ou traiter chaque morceau
             for index, chunk in enumerate(chunks, start=1):
-                print(f"Bloc {index} :\n{chunk}\n{'-'*50}")  # Affiche les blocs pour visualiser
-                await ctx.send(f"\n{chunk}\n{'-'*50}")
+                # Trouve l'indice de la ligne "Citations:"
+                citations_index = chunk.find('Citations:')
+                cleaned_chunk = chunk[:citations_index].strip()
+                print(f"Bloc {index}:\n{cleaned_chunk}\n{'-'*50}")
+                await ctx.send(f"\n{cleaned_chunk}\n{'-'*50}")
     
            
     except asyncio.TimeoutError:
