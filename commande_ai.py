@@ -140,7 +140,7 @@ async def devoir(ctx):
         try:
             #Utilise OpenAI pour générer les réponses de l'exercice
             options = webdriver.ChromeOptions()
-            options.add_argument("--headless")  # Active le mode headless
+            #options.add_argument("--headless")  # Active le mode headless
             options.add_argument("executable_path=chromedriver.exe")
             driver = webdriver.Chrome(options=options)   
             driver.get("https://www.phind.com/")
@@ -161,10 +161,14 @@ async def devoir(ctx):
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
             return await ctx.send("Erreur lors de la génération avec l'IA") 
-        else :   
-            await ctx.send(f"{text_response}")
-            await ctx.send("test")
-            await ctx.send(f"test : {text_response}")
+        else :
+            # Limite de caractères pour Discord
+            char_limit = 1900
+            # Diviser le texte en morceaux
+            chunks = [text_response[i:i + char_limit] for i in range(0, len(text_response), char_limit)]   
+            for chunk in chunks:
+                print(chunks)
+                await ctx.send(f"Réponse : {chunks}")
     
            
     except asyncio.TimeoutError:
