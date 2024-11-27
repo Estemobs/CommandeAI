@@ -165,10 +165,13 @@ async def devoir(ctx):
             # Limite de caractères pour Discord
             char_limit = 1900
             # Diviser le texte en morceaux
-            chunks = [text_response[i:i + char_limit] for i in range(0, len(text_response), char_limit)]   
-            for chunk in chunks:
-                print(chunks)
-                await ctx.send(f"Réponse : {chunks}")
+            # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
+            chunks = [text_response[i:i + char_limit] for i in range(0, len(text_response), char_limit)]
+
+            # Afficher ou traiter chaque morceau
+            for index, chunk in enumerate(chunks, start=1):
+                print(f"Bloc {index} :\n{chunk}\n{'-'*50}")  # Affiche les blocs pour visualiser
+                await ctx.send(f"\n{chunk}\n{'-'*50}")
     
            
     except asyncio.TimeoutError:
