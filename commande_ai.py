@@ -16,7 +16,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from seleniumbase import Driver
+from seleniumbase import page_actions
 from io import BytesIO
 from PIL import Image
 from discord.ext import commands
@@ -141,18 +142,21 @@ async def devoir(ctx):
         try:
             await ctx.send("Génération de réponse en cours...")
             #Utilise OpenAI pour générer les réponses de l'exercice
-            options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # Active le mode headless
-            options.add_argument("executable_path=chromedriver.exe")
-            driver = webdriver.Chrome(options=options)   
+            driver = Driver(headless=True, uc=True)
             driver.get("https://www.phind.com/")
+            time.sleep(2)
             driver.set_window_size(1280, 1024)
+            time.sleep(2)
             # Localise l'élément en utilisant un sélecteur approprié
+            driver.save_screenshot("screen0.png")
             message_box = driver.find_element(By.NAME, "q")
+            driver.save_screenshot("screen1.png")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
+            time.sleep(2)
             # Écrire du texte dans l'élément
             message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
+            time.sleep(2)
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
             time.sleep(15)
