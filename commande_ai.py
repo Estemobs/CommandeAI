@@ -71,8 +71,7 @@ def extract_text_from_image(image_url):
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
-    await ctx.send("Le texte extrait de l'image est :")
-    await ctx.send(f"```{text}```")
+    await ctx.send("Extraction du texte en cours...")
 
 
 #fonction pour améliorer la qualité de l'image
@@ -124,7 +123,8 @@ async def devoir(ctx):
         
         # Envoie l'image améliorée
         try:
-            await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
+            await ctx.send("amélioration de l'image ...")
+            #await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
             print("Image envoyée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'envoi de l'image : {str(e)}")
@@ -139,6 +139,7 @@ async def devoir(ctx):
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
         try:
+            await ctx.send("Génération de réponse en cours...")
             #Utilise OpenAI pour générer les réponses de l'exercice
             options = webdriver.ChromeOptions()
             #options.add_argument("--headless")  # Active le mode headless
