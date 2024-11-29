@@ -10,6 +10,7 @@ import numpy as np
 import time
 import pyperclip
 import re
+import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -142,7 +143,9 @@ async def devoir(ctx):
         try:
             await ctx.send("Génération de réponse en cours...")
             #Utilise OpenAI pour générer les réponses de l'exercice
-            driver = Driver(headless=True, uc=True)
+            options = uc.ChromeOptions()
+            options.add_argument("--headless")
+            driver = uc.Chrome(options = options)
             driver.get("https://www.phind.com/")
             time.sleep(2)
             driver.set_window_size(1280, 1024)
