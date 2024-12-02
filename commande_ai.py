@@ -143,10 +143,9 @@ async def devoir(ctx):
         try:
             await ctx.send("Génération de réponse en cours...")
             #Utilise OpenAI pour générer les réponses de l'exercice
-            options = uc.ChromeOptions()
-            options.add_argument("--headless")
-            driver = uc.Chrome(options = options)
+            driver = Driver(uc=True, headless=True)
             driver.get("https://www.phind.com/")
+            print("connexion au site")
             time.sleep(2)
             driver.set_window_size(1280, 1024)
             time.sleep(2)
@@ -154,18 +153,23 @@ async def devoir(ctx):
             driver.save_screenshot("screen0.png")
             message_box = driver.find_element(By.NAME, "q")
             driver.save_screenshot("screen1.png")
+            print("Localise l'élément en utilisant un sélecteur approprié")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
             time.sleep(2)
             # Écrire du texte dans l'élément
             message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
+            print("Écrire du texte dans l'élément")
             time.sleep(2)
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
+            print("Simuler la touche Entrée pour valider le message")
             time.sleep(15)
             driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
+            print("copie du message ")
             time.sleep(2)
             text_response = pyperclip.paste()
+            print("envoi du message")
             print(text_response)
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
