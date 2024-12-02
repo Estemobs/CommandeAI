@@ -2,3 +2,5 @@ secrets.json
 venv/
 .venv
 __pycache__/
+chromedriver
+
