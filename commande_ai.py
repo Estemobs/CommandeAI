@@ -31,24 +31,6 @@ async def on_ready():
     print("Le bot est en ligne")
     await client.change_presence(activity=discord.Game(name=".help")) 
 
-#automatisation pour signalé les erreurs
-@client.event
-async def on_command_error(ctx, error):
-    channel = client.get_channel(827566899004440666)
-    error_traceback = traceback.format_exception(type(error), error, error.__traceback__)
-    error_msg = ''.join(error_traceback)
-    await channel.send(f"Erreur lors de l'exécution de la commande {ctx.command} par {ctx.author}: {error}\n```{error_msg}```")
-    print(error_msg)
-    
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send_help(ctx.command)
-        await ctx.send("Erreur de syntaxe : un ou plusieurs arguments manquants")
-    elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("Vous n'avez pas la permission d'utiliser cette commande.")
-    elif isinstance(error, commands.CheckFailure):
-        await ctx.send("Vous n'avez pas le rôle requis pour utiliser cette commande.")
-
-
 # Fonction pour extraire le texte d'une image
 def extract_text_from_image(image_url):
     try:
@@ -150,9 +132,7 @@ async def devoir(ctx):
             driver.set_window_size(1280, 1024)
             time.sleep(2)
             # Localise l'élément en utilisant un sélecteur approprié
-            driver.save_screenshot("screen0.png")
             message_box = driver.find_element(By.NAME, "q")
-            driver.save_screenshot("screen1.png")
             print("Localise l'élément en utilisant un sélecteur approprié")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
@@ -164,8 +144,10 @@ async def devoir(ctx):
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
             print("Simuler la touche Entrée pour valider le message")
+            driver.save_screenshot("screen0.png")
             time.sleep(15)
             driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
+            driver.save_screenshot("screen1.png")
             print("copie du message ")
             time.sleep(2)
             text_response = pyperclip.paste()
