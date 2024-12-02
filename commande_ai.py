@@ -17,6 +17,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support import expected_conditions as EC
 from seleniumbase import Driver
 from seleniumbase import page_actions
 from io import BytesIO
@@ -146,29 +147,38 @@ async def devoir(ctx):
             print("Simuler la touche Entrée pour valider le message")
             driver.save_screenshot("screen0.png")
             time.sleep(15)
-            driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
+            # Identifier le texte pertinent
+            print("sélection du prompt")
             driver.save_screenshot("screen1.png")
-            print("copie du message ")
-            time.sleep(2)
-            text_response = pyperclip.paste()
-            print("envoi du message")
-            print(text_response)
+            elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
+            # Stocker le texte dans une variable
+            content_text = [element.text for element in elements]
+            formatted_text = "\n".join(content_text)
+            print(f"texte formaté {formatted_text}")
+        
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
             return await ctx.send("Erreur lors de la génération avec l'IA") 
         else :
-            # Limite de caractères pour Discord
-            char_limit = 1900
+            # Texte formaté pour Discord avec mise en forme
+            char_limit = 1900  # Limite de caractères Discord
+
+            # Ajouter mise en forme avec sauts de ligne et gras pour les exercices
+            formatted_text = ""
+            for line in content_text:
+                if line.startswith("Exercice"):  # Vérifie si c'est un titre d'exercice
+                    formatted_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
+                else:
+                    formatted_text += f"{line}\n"
+
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [text_response[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(text_response), char_limit)]
+            chunks = [formatted_text[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(formatted_text), char_limit)]
 
             # Afficher ou traiter chaque morceau
             for index, chunk in enumerate(chunks, start=1):
-                # Trouve l'indice de la ligne "Citations:"
-                citations_index = chunk.find('Citations:')
-                cleaned_chunk = chunk[:citations_index].strip()
-                print(f"Bloc {index}:\n{cleaned_chunk}\n{'-'*50}")
-                await ctx.send(f"\n{cleaned_chunk}\n")
+                print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
+                await ctx.send(f"\n{chunk}\n")
+
     
            
     except asyncio.TimeoutError:
