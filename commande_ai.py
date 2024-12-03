@@ -166,7 +166,7 @@ async def devoir(ctx):
             else:
                 pass
 
-            # Texte formaté pour Discord avec mise en forme
+           
             char_limit = 1900 
 
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
