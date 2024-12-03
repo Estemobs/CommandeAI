@@ -1,15 +1,12 @@
 import discord
 import asyncio
 import json
-import traceback
 import requests
 import io
 import cv2
 import easyocr
 import numpy as np
 import time
-import pyperclip
-import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
