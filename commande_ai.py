@@ -154,7 +154,6 @@ async def devoir(ctx):
             content_text = [element.text for element in elements]
             unique_content_text = list(dict.fromkeys(content_text))
 
-        
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
             return await ctx.send("Erreur lors de la génération avec l'IA") 
@@ -165,7 +164,7 @@ async def devoir(ctx):
             # Ajouter mise en forme avec sauts de ligne et gras pour les exercices
             unique_content_text = ""
             for line in content_text:
-                if line.startswith("Exercice"):  # Vérifie si c'est un titre d'exercice
+                if line.startswith("Exercice") or line.startswith("Conclusion"):  # Vérifie si c'est un titre d'exercice
                     unique_content_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
                 else:
                     unique_content_text += f"{line}\n"
