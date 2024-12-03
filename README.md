@@ -24,7 +24,8 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
    }
    ```
 
-3. Assurez-vous d'avoir Selenium WebDriver installé et correctement configuré pour votre système.
+3. Assurez-vous d'avoir Selenium WebDriver installé et correctement configuré pour votre système :
+https://googlechromelabs.github.io/chrome-for-testing/#stable
 
 
 ## Utilisation
