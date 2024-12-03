@@ -153,9 +153,11 @@ async def devoir(ctx):
             elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
             # Stocker le texte dans une variable
             content_text = [element.text for element in elements]
+            #print(f"content_text : {content_text}")
             unique_content_text = list(dict.fromkeys(content_text))
-            formatted_text = "\n".join(content_text)
-            print(f"texte formaté {formatted_text}")
+            #print(f"unique content text : {unique_content_text}")
+            #formatted_text = "\n".join(content_text)
+            #print(f"texte formaté {formatted_text}")
         
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
@@ -165,15 +167,15 @@ async def devoir(ctx):
             char_limit = 1900  # Limite de caractères Discord
 
             # Ajouter mise en forme avec sauts de ligne et gras pour les exercices
-            formatted_text = ""
+            unique_content_text = ""
             for line in content_text:
                 if line.startswith("Exercice"):  # Vérifie si c'est un titre d'exercice
-                    formatted_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
+                    unique_content_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
                 else:
-                    formatted_text += f"{line}\n"
+                    unique_content_text += f"{line}\n"
 
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [formatted_text[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(formatted_text), char_limit)]
+            chunks = [unique_content_text[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(unique_content_text), char_limit)]
 
             # Afficher ou traiter chaque morceau
             for index, chunk in enumerate(chunks, start=1):
