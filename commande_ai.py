@@ -105,6 +105,7 @@ async def devoir(ctx):
         # Envoie l'image améliorée
         try:
             await ctx.send("amélioration de l'image ...")
+            # Affichage de l'image en cas de besoin 
             #await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
             print("Image envoyée")  # Pour le débogage
         except Exception as e:
@@ -125,26 +126,31 @@ async def devoir(ctx):
             driver = Driver(uc=True, headless=True)
             driver.get("https://www.phind.com/")
             print("connexion au site")
+            await ctx.send("connexion au site ...")
             time.sleep(2)
             driver.set_window_size(1280, 1024)
             time.sleep(2)
             # Localise l'élément en utilisant un sélecteur approprié
             message_box = driver.find_element(By.NAME, "q")
             print("Localise l'élément en utilisant un sélecteur approprié")
+            await ctx.send("localisations des éléments ...")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
             time.sleep(2)
             # Écrire du texte dans l'élément
             message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
             print("Écrire du texte dans l'élément")
+            await ctx.send("Ecriture du texte ...")
             time.sleep(2)
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
             print("Simuler la touche Entrée pour valider le message")
+            await ctx.send("simulations des touches ...")
             driver.save_screenshot("screen0.png")
             time.sleep(15)
             # Identifier le texte pertinent
             print("sélection du prompt")
+            await ctx.send("sélection du prompt ...")
             driver.save_screenshot("screen1.png")
             elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
             # Stocker le texte dans une variable
