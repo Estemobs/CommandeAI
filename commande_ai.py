@@ -167,7 +167,7 @@ async def devoir(ctx):
                 pass
 
             # Texte formaté pour Discord avec mise en forme
-            char_limit = 1900  # Limite de caractères Discord
+            char_limit = 1900 
 
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
             chunks = [markdown_content[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(markdown_content), char_limit)]
