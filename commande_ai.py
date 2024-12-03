@@ -151,13 +151,9 @@ async def devoir(ctx):
             print("Sélection du prompt")
             await ctx.send("Sélection du prompt ...")
             elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
-            # Stocker le texte dans une variable
             content_text = [element.text for element in elements]
-            #print(f"content_text : {content_text}")
             unique_content_text = list(dict.fromkeys(content_text))
-            #print(f"unique content text : {unique_content_text}")
-            #formatted_text = "\n".join(content_text)
-            #print(f"texte formaté {formatted_text}")
+
         
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
