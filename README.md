@@ -1,6 +1,6 @@
 # Bot AI Discord
 
-Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à l'intelligence artificielle, en particulier le traitement d'images et la résolution de problèmes mathématiques.
+Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à l'intelligence artificielle, en particulier le traitement d'images et la résolution de problèmes.
 
 ## Fonctionnalités
 
@@ -41,7 +41,7 @@ Cela provoquera le bot à :
 1. Demander une image ou un lien vers une image
 2. Traiter l'image
 3. Extraire le texte de l'image
-4. Utiliser phind pour générer des réponses à des exercices mathématiques
+4. Utiliser phind pour générer des réponses à des exercices
 5. Afficher les résultats sous forme de messages Discord formatés
 
 ## Contribution
