@@ -104,7 +104,7 @@ async def devoir(ctx):
         
         # Envoie l'image améliorée
         try:
-            await ctx.send("amélioration de l'image ...")
+            await ctx.send("Amélioration de l'image ...")
             # Affichage de l'image en cas de besoin 
             #await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
             print("Image envoyée")  # Pour le débogage
