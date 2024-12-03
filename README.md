@@ -1,4 +1,3 @@
-```markdown
 # Bot AI Discord
 
 Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à l'intelligence artificielle, en particulier le traitement d'images et la résolution de problèmes mathématiques.
