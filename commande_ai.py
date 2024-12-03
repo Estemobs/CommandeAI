@@ -52,7 +52,7 @@ def extract_text_from_image(image_url):
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
-    await ctx.send("Extraction du texte en cours...")
+    await ctx.send("Extraction du texte en cours ...")
 
 
 #fonction pour améliorer la qualité de l'image
@@ -121,19 +121,19 @@ async def devoir(ctx):
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
         try:
-            await ctx.send("Génération de réponse en cours...")
+            await ctx.send("Génération de réponses en cours ...")
             #Utilise OpenAI pour générer les réponses de l'exercice
             driver = Driver(uc=True, headless=True)
             driver.get("https://www.phind.com/")
             print("connexion au site")
-            await ctx.send("connexion au site ...")
+            await ctx.send("Connexion au site en cours ...")
             time.sleep(2)
             driver.set_window_size(1280, 1024)
             time.sleep(2)
             # Localise l'élément en utilisant un sélecteur approprié
             message_box = driver.find_element(By.NAME, "q")
             print("Localise l'élément en utilisant un sélecteur approprié")
-            await ctx.send("localisations des éléments ...")
+            await ctx.send("Localisation des éléments ...")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
             time.sleep(2)
@@ -145,13 +145,11 @@ async def devoir(ctx):
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
             print("Simuler la touche Entrée pour valider le message")
-            await ctx.send("simulations des touches ...")
-            driver.save_screenshot("screen0.png")
+            await ctx.send("Simulations des touches ...")
             time.sleep(15)
             # Identifier le texte pertinent
-            print("sélection du prompt")
-            await ctx.send("sélection du prompt ...")
-            driver.save_screenshot("screen1.png")
+            print("Sélection du prompt")
+            await ctx.send("Sélection du prompt ...")
             elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
             # Stocker le texte dans une variable
             content_text = [element.text for element in elements]
