@@ -7,6 +7,7 @@ import cv2
 import easyocr
 import numpy as np
 import time
+from markdownify import markdownify as md
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -150,36 +151,35 @@ async def devoir(ctx):
             # Identifier le texte pertinent
             print("Sélection du prompt")
             await ctx.send("Sélection du prompt ...")
-            elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
-            # Stocker le texte dans une variable
-            content_text = [element.text for element in elements]
-            unique_content_text = list(dict.fromkeys(content_text))
-            formatted_text = "\n".join(content_text)
-            print(f"texte formaté {formatted_text}")
-        
+            # Localiser la div contenant l'information par son balisage ou ses classes
+            div_element = driver.find_element(By.XPATH, "//div[h6[contains(text(),'Answer | Phind Instant Model')]]")
+            html_content = div_element.get_attribute('outerHTML')
+            # Convertir le HTML en Markdown
+            markdown_content = md(html_content)
+            # Afficher le contenu converti en Markdown
+            print(markdown_content)
+
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
             return await ctx.send("Erreur lors de la génération avec l'IA") 
         else :
+            if markdown_content.strip().startswith(("###### Answer | Phind Instant Model\n", "Voici ma réponse aux exercices et questions posées :")):
+                markdown_content = '\n'.join(line for line in markdown_content.split('\n') if not line.startswith(('######', 'Voici')))
+            else:
+                pass
+
             # Texte formaté pour Discord avec mise en forme
             char_limit = 1900  # Limite de caractères Discord
 
-            # Ajouter mise en forme avec sauts de ligne et gras pour les exercices
-            formatted_text = ""
-            for line in content_text:
-                if line.startswith("Exercice"):  # Vérifie si c'est un titre d'exercice
-                    formatted_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
-                else:
-                    formatted_text += f"{line}\n"
-
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [formatted_text[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(formatted_text), char_limit)]
+            chunks = [markdown_content[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(markdown_content), char_limit)]
 
             # Afficher ou traiter chaque morceau
             for index, chunk in enumerate(chunks, start=1):
                 print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
-                await ctx.send(f"\n{chunk}\n")
-
+                embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
+                #await ctx.send(f"\n{chunk}\n")
+                await ctx.send(embed=embed)
     
            
     except asyncio.TimeoutError:
