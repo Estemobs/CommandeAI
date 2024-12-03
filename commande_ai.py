@@ -156,8 +156,6 @@ async def devoir(ctx):
             html_content = div_element.get_attribute('outerHTML')
             # Convertir le HTML en Markdown
             markdown_content = md(html_content)
-            # Afficher le contenu converti en Markdown
-            print(markdown_content)
 
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
