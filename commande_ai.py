@@ -10,7 +10,6 @@ import numpy as np
 import time
 import pyperclip
 import re
-import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
@@ -153,6 +152,7 @@ async def devoir(ctx):
             elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
             # Stocker le texte dans une variable
             content_text = [element.text for element in elements]
+            unique_content_text = list(dict.fromkeys(content_text))
             formatted_text = "\n".join(content_text)
             print(f"texte formaté {formatted_text}")
         
