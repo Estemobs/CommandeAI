@@ -178,7 +178,6 @@ async def devoir(ctx):
             for index, chunk in enumerate(chunks, start=1):
                 print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
                 embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
-                #await ctx.send(f"\n{chunk}\n")
                 await ctx.send(embed=embed)
     
            
