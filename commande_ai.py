@@ -1,22 +1,21 @@
 import discord
 import asyncio
 import json
-import traceback
 import requests
 import io
 import cv2
 import easyocr
 import numpy as np
 import time
-import pyperclip
-import re
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.support import expected_conditions as EC
+from seleniumbase import Driver
+from seleniumbase import page_actions
 from io import BytesIO
 from PIL import Image
 from discord.ext import commands
@@ -28,24 +27,6 @@ client = commands.Bot(command_prefix=".", intents=intents)
 async def on_ready():
     print("Le bot est en ligne")
     await client.change_presence(activity=discord.Game(name=".help")) 
-
-#automatisation pour signalé les erreurs
-@client.event
-async def on_command_error(ctx, error):
-    channel = client.get_channel(827566899004440666)
-    error_traceback = traceback.format_exception(type(error), error, error.__traceback__)
-    error_msg = ''.join(error_traceback)
-    await channel.send(f"Erreur lors de l'exécution de la commande {ctx.command} par {ctx.author}: {error}\n```{error_msg}```")
-    print(error_msg)
-    
-    if isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send_help(ctx.command)
-        await ctx.send("Erreur de syntaxe : un ou plusieurs arguments manquants")
-    elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("Vous n'avez pas la permission d'utiliser cette commande.")
-    elif isinstance(error, commands.CheckFailure):
-        await ctx.send("Vous n'avez pas le rôle requis pour utiliser cette commande.")
-
 
 # Fonction pour extraire le texte d'une image
 def extract_text_from_image(image_url):
@@ -71,8 +52,7 @@ def extract_text_from_image(image_url):
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
-    await ctx.send("Le texte extrait de l'image est :")
-    await ctx.send(f"```{text}```")
+    await ctx.send("Extraction du texte en cours ...")
 
 
 #fonction pour améliorer la qualité de l'image
@@ -124,7 +104,9 @@ async def devoir(ctx):
         
         # Envoie l'image améliorée
         try:
-            await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
+            await ctx.send("Amélioration de l'image ...")
+            # Affichage de l'image en cas de besoin 
+            #await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
             print("Image envoyée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'envoi de l'image : {str(e)}")
@@ -139,42 +121,65 @@ async def devoir(ctx):
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
         try:
+            await ctx.send("Génération de réponses en cours ...")
             #Utilise OpenAI pour générer les réponses de l'exercice
-            options = webdriver.ChromeOptions()
-            #options.add_argument("--headless")  # Active le mode headless
-            options.add_argument("executable_path=chromedriver.exe")
-            driver = webdriver.Chrome(options=options)   
+            driver = Driver(uc=True, headless=True)
             driver.get("https://www.phind.com/")
+            print("connexion au site")
+            await ctx.send("Connexion au site en cours ...")
+            time.sleep(2)
             driver.set_window_size(1280, 1024)
+            time.sleep(2)
             # Localise l'élément en utilisant un sélecteur approprié
             message_box = driver.find_element(By.NAME, "q")
+            print("Localise l'élément en utilisant un sélecteur approprié")
+            await ctx.send("Localisation des éléments ...")
             # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
             message_box.click()
+            time.sleep(2)
             # Écrire du texte dans l'élément
             message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
+            print("Écrire du texte dans l'élément")
+            await ctx.send("Ecriture du texte ...")
+            time.sleep(2)
             # Simuler la touche Entrée pour valider le message
             message_box.send_keys(Keys.ENTER)
+            print("Simuler la touche Entrée pour valider le message")
+            await ctx.send("Simulations des touches ...")
             time.sleep(15)
-            driver.find_element(By.CSS_SELECTOR, ".fe-copy").click()
-            time.sleep(2)
-            text_response = pyperclip.paste()
-            print(text_response)
+            # Identifier le texte pertinent
+            print("Sélection du prompt")
+            await ctx.send("Sélection du prompt ...")
+            elements = driver.find_elements(By.XPATH, "//div[@class='fs-5']//*[self::p or self::ul or self::li or self::h3]")
+            # Stocker le texte dans une variable
+            content_text = [element.text for element in elements]
+            unique_content_text = list(dict.fromkeys(content_text))
+            formatted_text = "\n".join(content_text)
+            print(f"texte formaté {formatted_text}")
+        
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
             return await ctx.send("Erreur lors de la génération avec l'IA") 
         else :
-            # Limite de caractères pour Discord
-            char_limit = 1900
+            # Texte formaté pour Discord avec mise en forme
+            char_limit = 1900  # Limite de caractères Discord
+
+            # Ajouter mise en forme avec sauts de ligne et gras pour les exercices
+            formatted_text = ""
+            for line in content_text:
+                if line.startswith("Exercice"):  # Vérifie si c'est un titre d'exercice
+                    formatted_text += f"\n\n**{line}**\n\n"  # Texte en gras et saut de ligne avant/après
+                else:
+                    formatted_text += f"{line}\n"
+
             # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [text_response[i:i + char_limit] for i in range(0, len(text_response), char_limit)]
+            chunks = [formatted_text[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(formatted_text), char_limit)]
 
             # Afficher ou traiter chaque morceau
             for index, chunk in enumerate(chunks, start=1):
-                # Trouve l'indice de la ligne "Citations:"
-                citations_index = chunk.find('Citations:')
-                cleaned_chunk = chunk[:citations_index].strip()
-                print(f"Bloc {index}:\n{cleaned_chunk}\n{'-'*50}")
-                await ctx.send(f"\n{cleaned_chunk}\n{'-'*50}")
+                print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
+                await ctx.send(f"\n{chunk}\n")
+
     
            
     except asyncio.TimeoutError:

@@ -2,3 +2,8 @@ secrets.json
 venv/
 .venv
 __pycache__/
+chromedriver
+downloaded_files
+chromedriver.exe
+
+
