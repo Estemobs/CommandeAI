@@ -11,22 +11,27 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
 
 ## Installation
 
-1. Installez les dépendances requises :
-   ```
-   pip install -r requirements.txt
-   ```
+1. Créer et activer un environnement virtuel Python :
+    ```bash
+    python3 -m venv venv
+    source venv/bin/activate
+    ```
 
-2. Créez un fichier `secrets.json` dans le même répertoire que ce script avec votre token de bot Discord :
-   ```json
-   {
-     "ddcbeta_token": "Votre_TOKEN_BOT_ICI"
-     "ddc_token": "Votre_TOKEN_BOT_ICI"
-   }
-   ```
+2. Installez les dépendances requises :
+    ```bash
+    pip install -r requirements.txt
+    ```
 
-3. Assurez-vous d'avoir Selenium WebDriver installé et correctement configuré pour votre système :
+3. Créez un fichier `secrets.json` dans le même répertoire que ce script avec votre token de bot Discord :
+    ```json
+    {
+      "ddcbeta_token": "Votre_TOKEN_BOT_ICI"
+      "ddc_token": "Votre_TOKEN_BOT_ICI"
+    }
+    ```
+
+4. Assurez-vous d'avoir Selenium WebDriver installé et correctement configuré pour votre système :
 https://googlechromelabs.github.io/chrome-for-testing/#stable
-
 
 ## Utilisation
 
