@@ -193,11 +193,10 @@ with open("secrets.json", "r") as file:
 
 # Récupérer les tokens
 ddc_token = secrets["ddc_token"]
-ddcbeta_token = secrets["ddcbeta_token"]
         
 #démarrage du bot avec token 
 async def start_bot():
-    await client.start(ddcbeta_token)
+    await client.start(ddc_token)
 async def stop_bot():
     await client.logout()
 
