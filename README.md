@@ -25,7 +25,6 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
 3. Créez un fichier `secrets.json` dans le même répertoire que ce script avec votre token de bot Discord :
     ```json
     {
-      "ddcbeta_token": "Votre_TOKEN_BOT_ICI"
       "ddc_token": "Votre_TOKEN_BOT_ICI"
     }
     ```
