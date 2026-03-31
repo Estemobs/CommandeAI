@@ -6,20 +6,10 @@ import io
 import cv2
 import easyocr
 import numpy as np
-import time
-from markdownify import markdownify as md
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from seleniumbase import Driver
-from seleniumbase import page_actions
 from io import BytesIO
 from PIL import Image
 from discord.ext import commands
+from g4f.client import AsyncClient as AIAsyncClient
 
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix=".", intents=intents)
@@ -56,8 +46,8 @@ async def display_text(ctx, text):
     await ctx.send("Extraction du texte en cours ...")
 
 
-#fonction pour améliorer la qualité de l'image
-async def improve_image_quality(image_url):
+# Fonction pour améliorer la qualité de l'image
+def improve_image_quality(image_url):
     response = requests.get(image_url)
     img = np.array(bytearray(response.content), dtype=np.uint8)
     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
@@ -97,7 +87,8 @@ async def devoir(ctx):
         
         # Améliore la qualité de l'image
         try:
-            improved_image_bytes = await improve_image_quality(image_url)
+            loop = asyncio.get_event_loop()
+            improved_image_bytes = await loop.run_in_executor(None, improve_image_quality, image_url)
             print("Image améliorée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'amélioration de l'image : {str(e)}")
@@ -115,7 +106,8 @@ async def devoir(ctx):
         
         # Extrait le texte de l'image et l'affiche
         try:
-            text = extract_text_from_image(image_url)
+            loop = asyncio.get_event_loop()
+            text = await loop.run_in_executor(None, extract_text_from_image, image_url)
             print(f"Texte extrait : {text}")  # Pour le débogage
             await display_text(ctx, text)
         except Exception as e:
@@ -123,63 +115,40 @@ async def devoir(ctx):
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
         try:
             await ctx.send("Génération de réponses en cours ...")
-            #Utilise OpenAI pour générer les réponses de l'exercice
-            driver = Driver(uc=True, headless=True)
-            driver.get("https://www.phind.com/")
-            print("connexion au site")
-            await ctx.send("Connexion au site en cours ...")
-            time.sleep(2)
-            driver.set_window_size(1280, 1024)
-            time.sleep(2)
-            # Localise l'élément en utilisant un sélecteur approprié
-            message_box = driver.find_element(By.NAME, "q")
-            print("Localise l'élément en utilisant un sélecteur approprié")
-            await ctx.send("Localisation des éléments ...")
-            # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
-            message_box.click()
-            time.sleep(2)
-            # Écrire du texte dans l'élément
-            message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
-            print("Écrire du texte dans l'élément")
-            await ctx.send("Ecriture du texte ...")
-            time.sleep(2)
-            # Simuler la touche Entrée pour valider le message
-            message_box.send_keys(Keys.ENTER)
-            print("Simuler la touche Entrée pour valider le message")
-            await ctx.send("Simulations des touches ...")
-            time.sleep(15)
-            # Identifier le texte pertinent
-            print("Sélection du prompt")
-            await ctx.send("Sélection du prompt ...")
-            # Localiser la div contenant l'information par son balisage ou ses classes
-            div_element = driver.find_element(By.XPATH, "//div[h6[contains(text(),'Answer | Phind Instant Model')]]")
-            html_content = div_element.get_attribute('outerHTML')
-            # Convertir le HTML en Markdown
-            markdown_content = md(html_content)
-            # Afficher le contenu converti en Markdown
-            print(markdown_content)
+            # Utilise g4f (GPT4Free) pour générer les réponses — aucune clé API requise
+            ai_client = AIAsyncClient()
+            response = await ai_client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": f"Répondez aux exercices ou questions qui suivent : {text}"}],
+            )
+            markdown_content = response.choices[0].message.content
+            print(f"Réponse générée : {markdown_content[:100]}")
 
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
-            return await ctx.send("Erreur lors de la génération avec l'IA") 
-        else :
-            if markdown_content.strip().startswith(("###### Answer | Phind Instant Model\n", "Voici ma réponse aux exercices et questions posées :")):
-                markdown_content = '\n'.join(line for line in markdown_content.split('\n') if not line.startswith(('######', 'Voici')))
-            else:
-                pass
+            return await ctx.send("Erreur lors de la génération avec l'IA")
 
-            # Texte formaté pour Discord avec mise en forme
-            char_limit = 1900  # Limite de caractères Discord
+        # Texte formaté pour Discord avec mise en forme
+        char_limit = 1900  # Limite de caractères Discord
 
-            # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [markdown_content[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(markdown_content), char_limit)]
+        # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
+        chunks = []
+        start = 0
+        while start < len(markdown_content):
+            end = start + char_limit
+            chunk = markdown_content[start:end]
+            if end < len(markdown_content):
+                last_newline = chunk.rfind('\n')
+                if last_newline != -1:
+                    chunk = chunk[:last_newline + 1]
+            chunks.append(chunk)
+            start += len(chunk)
 
-            # Afficher ou traiter chaque morceau
-            for index, chunk in enumerate(chunks, start=1):
-                print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
-                embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
-                #await ctx.send(f"\n{chunk}\n")
-                await ctx.send(embed=embed)
+        # Afficher ou traiter chaque morceau
+        for index, chunk in enumerate(chunks, start=1):
+            print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
+            embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
+            await ctx.send(embed=embed)
     
            
     except asyncio.TimeoutError:
