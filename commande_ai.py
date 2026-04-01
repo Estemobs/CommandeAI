@@ -4,9 +4,7 @@ import json
 import requests
 import io
 import cv2
-import easyocr
 import numpy as np
-from io import BytesIO
 from PIL import Image
 from discord.ext import commands
 from g4f.client import AsyncClient as AIAsyncClient
@@ -22,6 +20,9 @@ async def on_ready():
 # Fonction pour extraire le texte d'une image
 def extract_text_from_image(image_url):
     try:
+        # Import local pour permettre un mode "installation rapide" sans OCR.
+        import easyocr
+
         # Télécharge l'image
         response = requests.get(image_url)
         img = Image.open(io.BytesIO(response.content))
@@ -36,6 +37,13 @@ def extract_text_from_image(image_url):
         extracted_text = ' '.join([item[1] for item in result])
         
         return extracted_text
+
+    except ModuleNotFoundError:
+        return (
+            "EasyOCR n'est pas installe. Executez: "
+            "pip install easyocr torch==2.5.1+cpu torchvision==0.20.1+cpu "
+            "--extra-index-url https://download.pytorch.org/whl/cpu"
+        )
     
     except Exception as e:
         print(f"Erreur lors de l'extraction du texte : {str(e)}")
