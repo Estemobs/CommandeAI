@@ -21,11 +21,7 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
     ```bash
     pip install -r requirements.txt
     ```
-
-   Installation OCR (optionnelle, plus lourde) pour la commande `.devoir` :
-    ```bash
-    pip install easyocr torch==2.5.1+cpu torchvision==0.20.1+cpu --extra-index-url https://download.pytorch.org/whl/cpu
-    ```
+    Ce fichier inclut aussi les dépendances OCR (EasyOCR + PyTorch CPU) necessaires a la commande `.devoir`.
 
 3. Créez un fichier `secrets.json` dans le même répertoire que ce script avec votre token de bot Discord :
     ```json
