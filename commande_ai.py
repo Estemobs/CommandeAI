@@ -9,6 +9,18 @@ from PIL import Image
 from discord.ext import commands
 from g4f.client import AsyncClient as AIAsyncClient
 
+# Providers g4f essayes en priorite pour eviter toute cle API.
+NO_KEY_PROVIDERS = [
+    "PollinationsAI",
+    "OperaAria",
+    "Perplexity",
+    "Qwen",
+    "WeWordle",
+    "TeachAnything",
+]
+
+_EASYOCR_READER = None
+
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix=".", intents=intents)
 
@@ -17,25 +29,31 @@ async def on_ready():
     print("Le bot est en ligne")
     await client.change_presence(activity=discord.Game(name=".help")) 
 
-# Fonction pour extraire le texte d'une image
-def extract_text_from_image(image_url):
+def _get_easyocr_reader():
+    global _EASYOCR_READER
     try:
-        # Import local pour permettre un mode "installation rapide" sans OCR.
         import easyocr
+    except ModuleNotFoundError:
+        raise
 
-        # Télécharge l'image
-        response = requests.get(image_url)
-        img = Image.open(io.BytesIO(response.content))
-        
-        # Initialise le lecteur OCR
-        reader = easyocr.Reader(['fr'])  # Utilise le français
-        
+    # Le chargement des modeles OCR est lourd: on le fait une seule fois.
+    if _EASYOCR_READER is None:
+        _EASYOCR_READER = easyocr.Reader(["fr"], gpu=False)
+    return _EASYOCR_READER
+
+
+# Fonction pour extraire le texte d'une image
+def extract_text_from_image(image_bytes):
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        reader = _get_easyocr_reader()
+
         # Extrait le texte
         result = reader.readtext(np.array(img))
-        
+
         # Rassemble le texte extrait
-        extracted_text = ' '.join([item[1] for item in result])
-        
+        extracted_text = " ".join([item[1] for item in result])
+
         return extracted_text
 
     except ModuleNotFoundError:
@@ -44,10 +62,38 @@ def extract_text_from_image(image_url):
             "pip install easyocr torch==2.5.1+cpu torchvision==0.20.1+cpu "
             "--extra-index-url https://download.pytorch.org/whl/cpu"
         )
-    
+
     except Exception as e:
         print(f"Erreur lors de l'extraction du texte : {str(e)}")
         return "Une erreur s'est produite lors de l'extraction du texte."
+
+
+async def generate_ai_answer(prompt_text):
+    last_error = None
+
+    for provider_name in NO_KEY_PROVIDERS:
+        try:
+            ai_client = AIAsyncClient(provider=provider_name)
+            response = await ai_client.chat.completions.create(
+                model="",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Repondez aux exercices ou questions qui suivent : {prompt_text}",
+                    }
+                ],
+            )
+            content = response.choices[0].message.content
+            if content and content.strip():
+                print(f"Provider g4f utilise: {provider_name}")
+                return content
+
+        except Exception as e:
+            last_error = e
+            print(f"Provider {provider_name} en echec: {str(e)}")
+            continue
+
+    raise RuntimeError(f"Aucun provider g4f sans cle n'a fonctionne. Derniere erreur: {last_error}")
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
@@ -115,26 +161,23 @@ async def devoir(ctx):
         # Extrait le texte de l'image et l'affiche
         try:
             loop = asyncio.get_event_loop()
-            text = await loop.run_in_executor(None, extract_text_from_image, image_url)
+            text = await loop.run_in_executor(None, extract_text_from_image, improved_image_bytes)
             print(f"Texte extrait : {text}")  # Pour le débogage
             await display_text(ctx, text)
         except Exception as e:
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
+
         try:
-            await ctx.send("Génération de réponses en cours ...")
-            # Utilise g4f (GPT4Free) pour générer les réponses — aucune clé API requise
-            ai_client = AIAsyncClient()
-            response = await ai_client.chat.completions.create(
-                model="gpt-4o-mini",
-                messages=[{"role": "user", "content": f"Répondez aux exercices ou questions qui suivent : {text}"}],
-            )
-            markdown_content = response.choices[0].message.content
-            print(f"Réponse générée : {markdown_content[:100]}")
+            await ctx.send("Generation de reponses en cours ...")
+            markdown_content = await generate_ai_answer(text)
+            print(f"Reponse generee : {markdown_content[:100]}")
 
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
-            return await ctx.send("Erreur lors de la génération avec l'IA")
+            return await ctx.send(
+                "Erreur IA: aucun provider sans cle n'a repondu. Reessayez dans quelques minutes."
+            )
 
         # Texte formaté pour Discord avec mise en forme
         char_limit = 1900  # Limite de caractères Discord
