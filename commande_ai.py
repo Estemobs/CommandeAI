@@ -4,22 +4,22 @@ import json
 import requests
 import io
 import cv2
-import easyocr
 import numpy as np
-import time
-from markdownify import markdownify as md
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.support import expected_conditions
-from selenium.webdriver.support.wait import WebDriverWait
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.support import expected_conditions as EC
-from seleniumbase import Driver
-from seleniumbase import page_actions
-from io import BytesIO
 from PIL import Image
 from discord.ext import commands
+from g4f.client import AsyncClient as AIAsyncClient
+
+# Providers g4f essayes en priorite pour eviter toute cle API.
+NO_KEY_PROVIDERS = [
+    "PollinationsAI",
+    "OperaAria",
+    "Perplexity",
+    "Qwen",
+    "WeWordle",
+    "TeachAnything",
+]
+
+_EASYOCR_READER = None
 
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix=".", intents=intents)
@@ -29,35 +29,79 @@ async def on_ready():
     print("Le bot est en ligne")
     await client.change_presence(activity=discord.Game(name=".help")) 
 
-# Fonction pour extraire le texte d'une image
-def extract_text_from_image(image_url):
+def _get_easyocr_reader():
+    global _EASYOCR_READER
     try:
-        # Télécharge l'image
-        response = requests.get(image_url)
-        img = Image.open(io.BytesIO(response.content))
-        
-        # Initialise le lecteur OCR
-        reader = easyocr.Reader(['fr'])  # Utilise le français
-        
+        import easyocr
+    except ModuleNotFoundError:
+        raise
+
+    # Le chargement des modeles OCR est lourd: on le fait une seule fois.
+    if _EASYOCR_READER is None:
+        _EASYOCR_READER = easyocr.Reader(["fr"], gpu=False)
+    return _EASYOCR_READER
+
+
+# Fonction pour extraire le texte d'une image
+def extract_text_from_image(image_bytes):
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        reader = _get_easyocr_reader()
+
         # Extrait le texte
         result = reader.readtext(np.array(img))
-        
+
         # Rassemble le texte extrait
-        extracted_text = ' '.join([item[1] for item in result])
-        
+        extracted_text = " ".join([item[1] for item in result])
+
         return extracted_text
-    
+
+    except ModuleNotFoundError:
+        return (
+            "EasyOCR n'est pas installe. Executez: "
+            "pip install easyocr torch==2.5.1+cpu torchvision==0.20.1+cpu "
+            "--extra-index-url https://download.pytorch.org/whl/cpu"
+        )
+
     except Exception as e:
         print(f"Erreur lors de l'extraction du texte : {str(e)}")
         return "Une erreur s'est produite lors de l'extraction du texte."
+
+
+async def generate_ai_answer(prompt_text):
+    last_error = None
+
+    for provider_name in NO_KEY_PROVIDERS:
+        try:
+            ai_client = AIAsyncClient(provider=provider_name)
+            response = await ai_client.chat.completions.create(
+                model="",
+                messages=[
+                    {
+                        "role": "user",
+                        "content": f"Repondez aux exercices ou questions qui suivent : {prompt_text}",
+                    }
+                ],
+            )
+            content = response.choices[0].message.content
+            if content and content.strip():
+                print(f"Provider g4f utilise: {provider_name}")
+                return content
+
+        except Exception as e:
+            last_error = e
+            print(f"Provider {provider_name} en echec: {str(e)}")
+            continue
+
+    raise RuntimeError(f"Aucun provider g4f sans cle n'a fonctionne. Derniere erreur: {last_error}")
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
     await ctx.send("Extraction du texte en cours ...")
 
 
-#fonction pour améliorer la qualité de l'image
-async def improve_image_quality(image_url):
+# Fonction pour améliorer la qualité de l'image
+def improve_image_quality(image_url):
     response = requests.get(image_url)
     img = np.array(bytearray(response.content), dtype=np.uint8)
     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
@@ -97,7 +141,8 @@ async def devoir(ctx):
         
         # Améliore la qualité de l'image
         try:
-            improved_image_bytes = await improve_image_quality(image_url)
+            loop = asyncio.get_event_loop()
+            improved_image_bytes = await loop.run_in_executor(None, improve_image_quality, image_url)
             print("Image améliorée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'amélioration de l'image : {str(e)}")
@@ -115,71 +160,46 @@ async def devoir(ctx):
         
         # Extrait le texte de l'image et l'affiche
         try:
-            text = extract_text_from_image(image_url)
+            loop = asyncio.get_event_loop()
+            text = await loop.run_in_executor(None, extract_text_from_image, improved_image_bytes)
             print(f"Texte extrait : {text}")  # Pour le débogage
             await display_text(ctx, text)
         except Exception as e:
             print(f"Erreur lors de l'extraction du texte : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'extraction du texte.")
+
         try:
-            await ctx.send("Génération de réponses en cours ...")
-            #Utilise OpenAI pour générer les réponses de l'exercice
-            driver = Driver(uc=True, headless=True)
-            driver.get("https://www.phind.com/")
-            print("connexion au site")
-            await ctx.send("Connexion au site en cours ...")
-            time.sleep(2)
-            driver.set_window_size(1280, 1024)
-            time.sleep(2)
-            # Localise l'élément en utilisant un sélecteur approprié
-            message_box = driver.find_element(By.NAME, "q")
-            print("Localise l'élément en utilisant un sélecteur approprié")
-            await ctx.send("Localisation des éléments ...")
-            # Cliquez dans l'élément pour activer la zone de texte (si nécessaire)
-            message_box.click()
-            time.sleep(2)
-            # Écrire du texte dans l'élément
-            message_box.send_keys(f"Répondez aux exercices ou questions qui suivent : {text}")
-            print("Écrire du texte dans l'élément")
-            await ctx.send("Ecriture du texte ...")
-            time.sleep(2)
-            # Simuler la touche Entrée pour valider le message
-            message_box.send_keys(Keys.ENTER)
-            print("Simuler la touche Entrée pour valider le message")
-            await ctx.send("Simulations des touches ...")
-            time.sleep(15)
-            # Identifier le texte pertinent
-            print("Sélection du prompt")
-            await ctx.send("Sélection du prompt ...")
-            # Localiser la div contenant l'information par son balisage ou ses classes
-            div_element = driver.find_element(By.XPATH, "//div[h6[contains(text(),'Answer | Phind Instant Model')]]")
-            html_content = div_element.get_attribute('outerHTML')
-            # Convertir le HTML en Markdown
-            markdown_content = md(html_content)
-            # Afficher le contenu converti en Markdown
-            print(markdown_content)
+            await ctx.send("Generation de reponses en cours ...")
+            markdown_content = await generate_ai_answer(text)
+            print(f"Reponse generee : {markdown_content[:100]}")
 
         except Exception as e:
             print(f"Erreur lors de la génération avec l'IA : {str(e)}")
-            return await ctx.send("Erreur lors de la génération avec l'IA") 
-        else :
-            if markdown_content.strip().startswith(("###### Answer | Phind Instant Model\n", "Voici ma réponse aux exercices et questions posées :")):
-                markdown_content = '\n'.join(line for line in markdown_content.split('\n') if not line.startswith(('######', 'Voici')))
-            else:
-                pass
+            return await ctx.send(
+                "Erreur IA: aucun provider sans cle n'a repondu. Reessayez dans quelques minutes."
+            )
 
-            # Texte formaté pour Discord avec mise en forme
-            char_limit = 1900  # Limite de caractères Discord
+        # Texte formaté pour Discord avec mise en forme
+        char_limit = 1900  # Limite de caractères Discord
 
-            # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-            chunks = [markdown_content[i:i + char_limit].rsplit('\n', 1)[0] + '\n' for i in range(0, len(markdown_content), char_limit)]
+        # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
+        chunks = []
+        start = 0
+        while start < len(markdown_content):
+            end = start + char_limit
+            chunk = markdown_content[start:end]
+            if end < len(markdown_content):
+                last_newline = chunk.rfind('\n')
+                if last_newline != -1:
+                    chunk = chunk[:last_newline + 1]
+            chunks.append(chunk)
+            start += len(chunk)
 
-            # Afficher ou traiter chaque morceau
-            for index, chunk in enumerate(chunks, start=1):
-                print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
-                embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
-                #await ctx.send(f"\n{chunk}\n")
-                await ctx.send(embed=embed)
+        # Afficher ou traiter chaque morceau
+        for index, chunk in enumerate(chunks, start=1):
+            print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
+            embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
+            await ctx.send(embed=embed)
     
            
     except asyncio.TimeoutError:

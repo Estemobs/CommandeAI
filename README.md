@@ -21,6 +21,7 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
     ```bash
     pip install -r requirements.txt
     ```
+    Ce fichier inclut aussi les dépendances OCR (EasyOCR + PyTorch CPU) necessaires a la commande `.devoir`.
 
 3. Créez un fichier `secrets.json` dans le même répertoire que ce script avec votre token de bot Discord :
     ```json
@@ -28,9 +29,6 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
       "ddc_token": "Votre_TOKEN_BOT_ICI"
     }
     ```
-
-4. Assurez-vous d'avoir Selenium WebDriver installé et correctement configuré pour votre système :
-https://googlechromelabs.github.io/chrome-for-testing/#stable
 
 ## Utilisation
 
@@ -46,7 +44,7 @@ Cela provoquera le bot à :
 1. Demander une image ou un lien vers une image
 2. Traiter l'image
 3. Extraire le texte de l'image
-4. Utiliser phind pour générer des réponses à des exercices
+4. Utiliser g4f pour générer des réponses à des exercices
 5. Afficher les résultats sous forme de messages Discord formatés
 
 ## Contribution
