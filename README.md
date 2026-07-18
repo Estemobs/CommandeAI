@@ -6,7 +6,7 @@ Ce bot Discord est conçu pour aider les utilisateurs avec des tâches liées à
 
 - Extraire du texte à partir des images téléchargées sur Discord
 - Améliorer la qualité des images avant le traitement
-- Générer des réponses à des exercices mathématiques en utilisant l'API OpenAI
+- Générer des réponses à des exercices mathématiques en utilisant g4f (sans clé API OpenAI)
 - Formater et afficher le texte extrait dans les messages Discord
 
 ## Installation
