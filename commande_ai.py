@@ -212,11 +212,11 @@ with open("secrets.json", "r") as file:
     secrets = json.load(file)
 
 # Récupérer les tokens
-ddc_token = secrets["ddc_token"]
-        
-#démarrage du bot avec token 
+discord_bot_token = secrets["discord_bot_token"]
+
+#démarrage du bot avec token
 async def start_bot():
-    await client.start(ddc_token)
+    await client.start(discord_bot_token)
 async def stop_bot():
     await client.logout()
 
