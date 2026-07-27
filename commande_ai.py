@@ -27,7 +27,7 @@ client = commands.Bot(command_prefix=".", intents=intents)
 @client.event
 async def on_ready():
     print("Le bot est en ligne")
-    await client.change_presence(activity=discord.Game(name=".help")) 
+    await client.change_presence(activity=discord.Game(name=".help"))
 
 def _get_easyocr_reader():
     global _EASYOCR_READER
@@ -79,7 +79,7 @@ async def generate_ai_answer(prompt_text):
                 messages=[
                     {
                         "role": "user",
-                        "content": f"Repondez aux exercices ou questions qui suivent : {prompt_text}",
+                        "content": "Repondez aux exercices ou questions qui suivent : " + prompt_text,
                     }
                 ],
             )
@@ -98,7 +98,6 @@ async def generate_ai_answer(prompt_text):
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
     await ctx.send("Extraction du texte en cours ...")
-
 
 # Fonction pour améliorer la qualité de l'image
 def improve_image_quality(image_url):
@@ -121,13 +120,11 @@ async def devoir(ctx):
     try:
         print("Commande devoir appelée")  # Pour le débogage
         await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
-        
-        # Attendre jusqu'à ce qu'un utilisateur envoie un message
+
         message = await client.wait_for('message', timeout=60.0)
-        
+
         print("Message reçu")  # Pour le débogage
-        
-        # Vérifie si le message contient une image valide
+
         if message.attachments:
             attachment = message.attachments[0]
             image_url = attachment.url
@@ -138,8 +135,9 @@ async def devoir(ctx):
         else:
             print("Aucune image ou lien trouvé")  # Pour le débogage
             return await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
-        
+
         # Améliore la qualité de l'image
+        try:
         try:
             loop = asyncio.get_event_loop()
             improved_image_bytes = await loop.run_in_executor(None, improve_image_quality, image_url)
@@ -151,8 +149,8 @@ async def devoir(ctx):
         # Envoie l'image améliorée
         try:
             await ctx.send("Amélioration de l'image ...")
-            # Affichage de l'image en cas de besoin 
-            #await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
+            # Affichage de l'image en cas de besoin
+            # await ctx.send(file=discord.File(BytesIO(improved_image_bytes), filename="improve_image.jpg"))
             print("Image envoyée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'envoi de l'image : {str(e)}")
@@ -200,12 +198,10 @@ async def devoir(ctx):
             print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
             embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
             await ctx.send(embed=embed)
-    
-           
+
     except asyncio.TimeoutError:
         print("Timeout atteint")
         return await ctx.send("Vous n'avez pas envoyé d'image dans le délai imparti.")
-        
 
 # Lire les secrets à partir du fichier JSON
 with open("secrets.json", "r") as file:
@@ -214,9 +210,10 @@ with open("secrets.json", "r") as file:
 # Récupérer les tokens
 discord_bot_token = secrets["discord_bot_token"]
 
-#démarrage du bot avec token
+# Démarrage du bot avec token
 async def start_bot():
     await client.start(discord_bot_token)
+
 async def stop_bot():
     await client.logout()
 
