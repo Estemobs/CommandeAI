@@ -213,6 +213,7 @@ with open("secrets.json", "r") as file:
 # Récupérer les tokens
 discord_bot_token = secrets["discord_bot_token"]
 
+
 # Démarrage du bot avec token
 async def start_bot():
     await client.start(discord_bot_token)
