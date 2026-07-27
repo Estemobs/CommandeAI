@@ -138,7 +138,6 @@ async def devoir(ctx):
 
         # Améliore la qualité de l'image
         try:
-        try:
             loop = asyncio.get_event_loop()
             improved_image_bytes = await loop.run_in_executor(None, improve_image_quality, image_url)
             print("Image améliorée")  # Pour le débogage
