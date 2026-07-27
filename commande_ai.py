@@ -24,10 +24,12 @@ _EASYOCR_READER = None
 intents = discord.Intents.all()
 client = commands.Bot(command_prefix=".", intents=intents)
 
+
 @client.event
 async def on_ready():
     print("Le bot est en ligne")
     await client.change_presence(activity=discord.Game(name=".help"))
+
 
 def _get_easyocr_reader():
     global _EASYOCR_READER
@@ -95,9 +97,11 @@ async def generate_ai_answer(prompt_text):
 
     raise RuntimeError(f"Aucun provider g4f sans cle n'a fonctionne. Derniere erreur: {last_error}")
 
+
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
     await ctx.send("Extraction du texte en cours ...")
+
 
 # Fonction pour améliorer la qualité de l'image
 def improve_image_quality(image_url):
@@ -144,7 +148,7 @@ async def devoir(ctx):
         except Exception as e:
             print(f"Erreur lors de l'amélioration de l'image : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'amélioration de l'image.")
-        
+
         # Envoie l'image améliorée
         try:
             await ctx.send("Amélioration de l'image ...")
@@ -154,7 +158,7 @@ async def devoir(ctx):
         except Exception as e:
             print(f"Erreur lors de l'envoi de l'image : {str(e)}")
             return await ctx.send("Une erreur s'est produite lors de l'envoi de l'image.")
-        
+
         # Extrait le texte de l'image et l'affiche
         try:
             loop = asyncio.get_event_loop()
@@ -212,6 +216,7 @@ discord_bot_token = secrets["discord_bot_token"]
 # Démarrage du bot avec token
 async def start_bot():
     await client.start(discord_bot_token)
+
 
 async def stop_bot():
     await client.logout()
