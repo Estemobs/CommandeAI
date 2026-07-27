@@ -50,3 +50,7 @@ Cela provoquera le bot à :
 ## Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à soumettre une Pull Request.
+
+## Licence
+
+Ce projet est sous licence MIT. Voir le fichier [LICENSE](LICENSE) pour plus de détails.
