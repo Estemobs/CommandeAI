@@ -24,7 +24,7 @@ nest-asyncio2==1.7.2
 networkx==3.6.1
 ninja==1.13.0
 numpy==2.4.6
-opencv-python-headless==4.13.0.92
+opencv-python-headless==5.0.0.93
 packaging==26.2
 pillow==11.3.0
 propcache==0.5.2
