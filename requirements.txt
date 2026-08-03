@@ -36,7 +36,7 @@ requests==2.34.2
 scikit-image==0.26.0
 scipy==1.18.0
 shapely==2.1.2
-sympy==1.13.1
+sympy==1.14.0
 tifffile==2026.3.3
 torch==2.5.1+cpu
 torchvision==0.20.1+cpu
