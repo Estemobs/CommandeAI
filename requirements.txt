@@ -14,7 +14,7 @@ frozenlist==1.8.0
 fsspec==2026.6.0
 g4f==7.9.4
 idna==3.18
-imageio==2.37.3
+imageio==2.37.4
 jinja2==3.1.6
 lazy-loader==0.5
 markupsafe==3.0.3
