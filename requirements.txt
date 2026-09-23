@@ -20,7 +20,7 @@ lazy-loader==0.6
 markupsafe==3.0.3
 mpmath==1.4.1
 multidict==6.9.1
-nest-asyncio2==1.7.2
+nest-asyncio2==1.7.3
 networkx==3.7
 ninja==1.13.2
 numpy==2.5.3
