@@ -38,8 +38,8 @@ scipy==1.18.1
 shapely==2.1.2
 sympy==1.14.0
 tifffile==2026.9.20
-torch==2.14.0+cpu
-torchvision==0.29.0+cpu
+torch==2.14.1+cpu
+torchvision==0.29.1+cpu
 typing-extensions==4.16.0
 urllib3==2.8.0
 yarl==1.25.1
