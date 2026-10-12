@@ -29,7 +29,7 @@ packaging==26.3
 pillow==11.3.0
 propcache==0.5.4
 pyclipper==1.4.0
-pycryptodome==3.24.0
+pycryptodome==3.24.1
 python-bidi==0.6.11
 pyyaml==6.0.3
 requests==2.34.2
