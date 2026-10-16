@@ -37,7 +37,7 @@ scikit-image==0.26.0
 scipy==1.18.1
 shapely==2.2.0
 sympy==1.14.0
-tifffile==2026.9.20
+tifffile==2026.10.15
 torch==2.14.1+cpu
 torchvision==0.29.1+cpu
 typing-extensions==4.16.0
