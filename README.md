@@ -49,7 +49,7 @@ Cela provoquera le bot à :
 
 ## État du projet
 
-Version 1.0.0 — les fonctionnalités décrites ci-dessus sont livrées et stables.
+Version 1.0.1 — les fonctionnalités décrites ci-dessus sont livrées.
 Aucun ticket fonctionnel ouvert ; les mises à jour de dépendances sont automatisées par Renovate.
 
 ## Contribution

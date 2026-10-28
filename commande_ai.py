@@ -100,7 +100,27 @@ async def generate_ai_answer(prompt_text):
 
 # Fonction pour afficher le texte extrait d'une image
 async def display_text(ctx, text):
-    await ctx.send("Extraction du texte en cours ...")
+    text = (text or "").strip()
+    if not text:
+        await ctx.send("Aucun texte détecté dans l'image.")
+        return
+
+    char_limit = 1900
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(start + char_limit, len(text))
+        if end < len(text):
+            last_newline = text.rfind('\n', start, end)
+            if last_newline > start:
+                end = last_newline + 1
+        chunks.append(text[start:end])
+        start = end
+
+    for index, chunk in enumerate(chunks, start=1):
+        title = "Texte extrait" if len(chunks) == 1 else f"Texte extrait ({index}/{len(chunks)})"
+        embed = discord.Embed(title=title, description=chunk, color=0x3498db)
+        await ctx.send(embed=embed)
 
 
 # Fonction pour améliorer la qualité de l'image
