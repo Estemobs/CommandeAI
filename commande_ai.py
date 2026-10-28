@@ -3,6 +3,8 @@ import asyncio
 import json
 import requests
 import io
+from pathlib import Path
+
 import cv2
 import numpy as np
 from PIL import Image
@@ -19,9 +21,13 @@ NO_KEY_PROVIDERS = [
     "TeachAnything",
 ]
 
+IMAGE_FETCH_TIMEOUT = 15
+MAX_IMAGE_BYTES = 10 * 1024 * 1024
+
 _EASYOCR_READER = None
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
+intents.message_content = True
 client = commands.Bot(command_prefix=".", intents=intents)
 
 
@@ -123,19 +129,54 @@ async def display_text(ctx, text):
         await ctx.send(embed=embed)
 
 
+def download_image(
+    image_url,
+    *,
+    timeout=IMAGE_FETCH_TIMEOUT,
+    max_bytes=MAX_IMAGE_BYTES,
+):
+    """Télécharge une image avec timeout et limite de taille."""
+    with requests.get(image_url, timeout=timeout, stream=True) as response:
+        response.raise_for_status()
+
+        content_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
+        if content_type and not content_type.startswith("image/"):
+            raise ValueError("L'URL ne pointe pas vers une image.")
+
+        data = bytearray()
+        for chunk in response.iter_content(chunk_size=64 * 1024):
+            if not chunk:
+                continue
+            data.extend(chunk)
+            if len(data) > max_bytes:
+                raise ValueError("Image trop volumineuse.")
+
+    if not data:
+        raise ValueError("L'image téléchargée est vide.")
+    return bytes(data)
+
+
+def _is_expected_response(message, author, channel):
+    """N'accepte que la réponse du même auteur dans le même salon."""
+    return message.author == author and message.channel == channel
+
+
 # Fonction pour améliorer la qualité de l'image
 def improve_image_quality(image_url):
-    response = requests.get(image_url)
-    img = np.array(bytearray(response.content), dtype=np.uint8)
+    image_bytes = download_image(image_url)
+    img = np.array(bytearray(image_bytes), dtype=np.uint8)
     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
+    if img is None:
+        raise ValueError("L'image téléchargée est illisible.")
 
     # appliquer un filtre pour améliorer la qualité de l'image
     img = cv2.bilateralFilter(img, 9, 75, 75)
 
     # convertir l'image en format JPG
-    ret, jpeg = cv2.imencode('.jpg', img)
-    img_bytes = jpeg.tobytes()
-    return img_bytes
+    ok, jpeg = cv2.imencode('.jpg', img)
+    if not ok:
+        raise ValueError("Impossible d'encoder l'image en JPEG.")
+    return jpeg.tobytes()
 
 
 # Commande pour extraire et afficher le texte d'une image
@@ -145,7 +186,11 @@ async def devoir(ctx):
         print("Commande devoir appelée")  # Pour le débogage
         await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
 
-        message = await client.wait_for('message', timeout=60.0)
+        message = await client.wait_for(
+            'message',
+            timeout=60.0,
+            check=lambda m: _is_expected_response(m, ctx.author, ctx.channel),
+        )
 
         print("Message reçu")  # Pour le débogage
 
@@ -162,8 +207,7 @@ async def devoir(ctx):
 
         # Améliore la qualité de l'image
         try:
-            loop = asyncio.get_event_loop()
-            improved_image_bytes = await loop.run_in_executor(None, improve_image_quality, image_url)
+            improved_image_bytes = await asyncio.to_thread(improve_image_quality, image_url)
             print("Image améliorée")  # Pour le débogage
         except Exception as e:
             print(f"Erreur lors de l'amélioration de l'image : {str(e)}")
@@ -181,8 +225,7 @@ async def devoir(ctx):
 
         # Extrait le texte de l'image et l'affiche
         try:
-            loop = asyncio.get_event_loop()
-            text = await loop.run_in_executor(None, extract_text_from_image, improved_image_bytes)
+            text = await asyncio.to_thread(extract_text_from_image, improved_image_bytes)
             print(f"Texte extrait : {text}")  # Pour le débogage
             await display_text(ctx, text)
         except Exception as e:
@@ -218,7 +261,7 @@ async def devoir(ctx):
 
         # Afficher ou traiter chaque morceau
         for index, chunk in enumerate(chunks, start=1):
-            print(f"Bloc {index}:\n{chunk}\n{'-'*50}")  # Imprime chaque bloc pour vérification
+            print(f"Bloc {index}:\n{chunk}\n{'-' * 50}")  # Imprime chaque bloc pour vérification
             embed = discord.Embed(description=f"\n{chunk}\n", color=0x00ff00)
             await ctx.send(embed=embed)
 
@@ -226,27 +269,33 @@ async def devoir(ctx):
         print("Timeout atteint")
         return await ctx.send("Vous n'avez pas envoyé d'image dans le délai imparti.")
 
-# Lire les secrets à partir du fichier JSON
-with open("secrets.json", "r") as file:
-    secrets = json.load(file)
 
-# Récupérer les tokens
-discord_bot_token = secrets["discord_bot_token"]
+def _load_discord_token(path="secrets.json"):
+    """Charge le token Discord sans effet de bord à l'import du module."""
+    secrets_path = Path(path)
+    try:
+        with secrets_path.open("r", encoding="utf-8") as file:
+            secrets = json.load(file)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Fichier de secrets introuvable: {secrets_path}") from None
+
+    token = secrets.get("discord_bot_token")
+    if not token:
+        raise ValueError(f"Clé 'discord_bot_token' absente de {secrets_path}")
+    return token
 
 
 # Démarrage du bot avec token
 async def start_bot():
-    await client.start(discord_bot_token)
+    await client.start(_load_discord_token())
 
 
 async def stop_bot():
     await client.logout()
 
+
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
     try:
-        loop.run_until_complete(start_bot())
+        asyncio.run(start_bot())
     except KeyboardInterrupt:
-        loop.run_until_complete(stop_bot())
-    finally:
-        loop.close()
+        pass
