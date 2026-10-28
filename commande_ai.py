@@ -140,7 +140,7 @@ def download_image(
         response.raise_for_status()
 
         content_type = response.headers.get("Content-Type", "").split(";", 1)[0].strip().lower()
-        if content_type and not content_type.startswith("image/"):
+        if not content_type.startswith("image/"):
             raise ValueError("L'URL ne pointe pas vers une image.")
 
         data = bytearray()

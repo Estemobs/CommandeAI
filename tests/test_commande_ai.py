@@ -67,6 +67,17 @@ def test_download_image_rejects_non_image(monkeypatch):
         commande_ai.download_image("https://example.test/page")
 
 
+def test_download_image_rejects_missing_content_type(monkeypatch):
+    monkeypatch.setattr(
+        commande_ai.requests,
+        "get",
+        lambda *args, **kwargs: FakeResponse(b"not an image", ""),
+    )
+
+    with pytest.raises(ValueError, match="image"):
+        commande_ai.download_image("https://example.test/no-header")
+
+
 def test_download_image_rejects_oversized_payload(monkeypatch):
     monkeypatch.setattr(
         commande_ai.requests,
@@ -104,6 +115,28 @@ def test_is_expected_response_only_accepts_same_author_and_channel():
     assert not commande_ai._is_expected_response(
         SimpleNamespace(author=author, channel=other), author, channel
     )
+
+
+def test_devoir_wait_for_filters_author_and_channel(monkeypatch):
+    ctx = SimpleNamespace(
+        author=SimpleNamespace(id=1),
+        channel=SimpleNamespace(id=2),
+        send=AsyncMock(),
+    )
+    seen = {}
+
+    async def fake_wait_for(event, **kwargs):
+        seen.update(kwargs)
+        raise asyncio.TimeoutError
+
+    monkeypatch.setattr(commande_ai.client, "wait_for", fake_wait_for)
+
+    asyncio.run(commande_ai.devoir.callback(ctx))
+
+    check = seen["check"]
+    assert check(SimpleNamespace(author=ctx.author, channel=ctx.channel))
+    assert not check(SimpleNamespace(author=SimpleNamespace(id=3), channel=ctx.channel))
+    assert not check(SimpleNamespace(author=ctx.author, channel=SimpleNamespace(id=4)))
 
 
 def test_display_text_sends_the_extracted_text():
