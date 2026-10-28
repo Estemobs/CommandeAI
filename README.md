@@ -47,6 +47,11 @@ Cela provoquera le bot à :
 4. Utiliser g4f pour générer des réponses à des exercices
 5. Afficher les résultats sous forme de messages Discord formatés
 
+## État du projet
+
+Version 1.0.0 — les fonctionnalités décrites ci-dessus sont livrées et stables.
+Aucun ticket fonctionnel ouvert ; les mises à jour de dépendances sont automatisées par Renovate.
+
 ## Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à soumettre une Pull Request.
