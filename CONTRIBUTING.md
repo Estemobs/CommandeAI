@@ -14,6 +14,7 @@ python commande_ai.py
 
 ```bash
 python -m compileall -q .
+python -m pytest tests/
 ```
 
 ## Pull requests

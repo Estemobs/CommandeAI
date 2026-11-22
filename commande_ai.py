@@ -19,6 +19,12 @@ NO_KEY_PROVIDERS = [
     "TeachAnything",
 ]
 
+# Extensions de fichiers acceptees comme image.
+IMAGE_EXTENSIONS = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+
+# Limite de caracteres par message Discord.
+DISCORD_CHAR_LIMIT = 1900
+
 _EASYOCR_READER = None
 
 intents = discord.Intents.all()
@@ -59,7 +65,7 @@ def extract_text_from_image(image_bytes):
         return extracted_text
 
     except ModuleNotFoundError:
-        return (
+        raise ModuleNotFoundError(
             "EasyOCR n'est pas installe. Executez: "
             "pip install easyocr torch==2.5.1+cpu torchvision==0.20.1+cpu "
             "--extra-index-url https://download.pytorch.org/whl/cpu"
@@ -67,7 +73,7 @@ def extract_text_from_image(image_bytes):
 
     except Exception as e:
         print(f"Erreur lors de l'extraction du texte : {str(e)}")
-        return "Une erreur s'est produite lors de l'extraction du texte."
+        raise RuntimeError(f"Une erreur s'est produite lors de l'extraction du texte : {e}")
 
 
 async def generate_ai_answer(prompt_text):
@@ -105,17 +111,7 @@ async def display_text(ctx, text):
         await ctx.send("Aucun texte détecté dans l'image.")
         return
 
-    char_limit = 1900
-    chunks = []
-    start = 0
-    while start < len(text):
-        end = min(start + char_limit, len(text))
-        if end < len(text):
-            last_newline = text.rfind('\n', start, end)
-            if last_newline > start:
-                end = last_newline + 1
-        chunks.append(text[start:end])
-        start = end
+    chunks = split_into_chunks(text, DISCORD_CHAR_LIMIT)
 
     for index, chunk in enumerate(chunks, start=1):
         title = "Texte extrait" if len(chunks) == 1 else f"Texte extrait ({index}/{len(chunks)})"
@@ -123,9 +119,24 @@ async def display_text(ctx, text):
         await ctx.send(embed=embed)
 
 
+def split_into_chunks(text, limit=DISCORD_CHAR_LIMIT):
+    """Découpe un texte en morceaux respectant les sauts de ligne."""
+    chunks = []
+    start = 0
+    while start < len(text):
+        end = min(start + limit, len(text))
+        if end < len(text):
+            last_newline = text.rfind('\n', start, end)
+            if last_newline > start:
+                end = last_newline + 1
+        chunks.append(text[start:end])
+        start = end
+    return chunks
+
+
 # Fonction pour améliorer la qualité de l'image
 def improve_image_quality(image_url):
-    response = requests.get(image_url)
+    response = requests.get(image_url, timeout=10)
     img = np.array(bytearray(response.content), dtype=np.uint8)
     img = cv2.imdecode(img, cv2.IMREAD_COLOR)
 
@@ -145,7 +156,11 @@ async def devoir(ctx):
         print("Commande devoir appelée")  # Pour le débogage
         await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
 
-        message = await client.wait_for('message', timeout=60.0)
+        message = await client.wait_for(
+            'message',
+            timeout=60.0,
+            check=lambda m: m.author == ctx.author and m.channel == ctx.channel,
+        )
 
         print("Message reçu")  # Pour le débogage
 
@@ -154,8 +169,10 @@ async def devoir(ctx):
             image_url = attachment.url
             print(f"Image attachée : {image_url}")  # Pour le débogage
         elif message.content:
-            image_url = message.content
+            image_url = message.content.strip()
             print(f"Lien de l'image : {image_url}")  # Pour le débogage
+            if not any(image_url.lower().endswith(ext) for ext in IMAGE_EXTENSIONS):
+                return await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
         else:
             print("Aucune image ou lien trouvé")  # Pour le débogage
             return await ctx.send("Veuillez envoyer une image ou un lien vers une image valide.")
@@ -201,20 +218,7 @@ async def devoir(ctx):
             )
 
         # Texte formaté pour Discord avec mise en forme
-        char_limit = 1900  # Limite de caractères Discord
-
-        # Diviser le texte en morceaux tout en conservant les sauts de ligne et le format
-        chunks = []
-        start = 0
-        while start < len(markdown_content):
-            end = start + char_limit
-            chunk = markdown_content[start:end]
-            if end < len(markdown_content):
-                last_newline = chunk.rfind('\n')
-                if last_newline != -1:
-                    chunk = chunk[:last_newline + 1]
-            chunks.append(chunk)
-            start += len(chunk)
+        chunks = split_into_chunks(markdown_content, DISCORD_CHAR_LIMIT)
 
         # Afficher ou traiter chaque morceau
         for index, chunk in enumerate(chunks, start=1):
